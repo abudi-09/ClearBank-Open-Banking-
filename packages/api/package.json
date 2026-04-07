@@ -1,0 +1,26 @@
+{
+  "name": "@clearbank/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "@clearbank/ledger": "0.1.0",
+    "@clearbank/types": "0.1.0",
+    "decimal.js": "latest",
+    "express": "latest"
+  },
+  "devDependencies": {
+    "@types/express": "latest",
+    "@types/supertest": "latest",
+    "supertest": "latest"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo \"No lint configured\"",
+    "test": "tsx --test src/**/*.test.ts"
+  }
+}

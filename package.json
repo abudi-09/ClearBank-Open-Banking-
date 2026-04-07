@@ -1,0 +1,24 @@
+{
+  "name": "clearbank",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open banking monorepo with ledger, API, and user-facing apps.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run --workspaces build",
+    "dev": "npm run --workspaces dev",
+    "dev:api": "npm run dev -w @clearbank/api",
+    "demo:seed": "tsx scripts/seed-demo.ts",
+    "lint": "npm run --workspaces lint",
+    "test": "npm run --workspaces test",
+    "typecheck": "npm run --workspaces typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

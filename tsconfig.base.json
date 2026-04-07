@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@clearbank/types": [
+        "packages/types/src/index.ts"
+      ],
+      "@clearbank/ledger": [
+        "packages/ledger/src/index.ts"
+      ],
+      "@clearbank/api": [
+        "packages/api/src/index.ts"
+      ],
+      "@clearbank/notifications": [
+        "packages/notifications/src/index.ts"
+      ]
+    },
+    "strict": true,
+    "ignoreDeprecations": "6.0",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "types": [
+      "node"
+    ]
+  }
+}
