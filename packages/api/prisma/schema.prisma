@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PERSONAL
+  BUSINESS
+  COMPLIANCE
+}
+
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  BUSINESS
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+  TRANSFER
+  FX
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum KYCDocumentType {
+  PASSPORT
+  DRIVING_LICENSE
+  UTILITY_BILL
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  role         Role           @default(PERSONAL)
+  fullName     String
+  kycStatus    KYCStatus      @default(PENDING)
+  createdAt    DateTime       @default(now())
+  accounts     Account[]
+  kycDocuments KYCDocument[]
+  auditLogs    AuditLog[]
+  notifications Notification[]
+}
+
+model Account {
+  id               String        @id @default(cuid())
+  userId           String
+  type             AccountType
+  currency         String
+  balance          Decimal       @db.Decimal(18, 2)
+  iban             String        @unique
+  isActive         Boolean       @default(true)
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outgoingPayments Payment[]     @relation("OutgoingPayments")
+  incomingPayments Payment[]     @relation("IncomingPayments")
+  fromTransactions Transaction[] @relation("FromAccountTransactions")
+  toTransactions   Transaction[] @relation("ToAccountTransactions")
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  fromAccountId String?
+  toAccountId   String?
+  amount        Decimal           @db.Decimal(18, 2)
+  currency      String
+  type          TransactionType
+  description   String
+  status        TransactionStatus @default(PENDING)
+  reference     String            @unique
+  createdAt     DateTime          @default(now())
+  fromAccount   Account?          @relation("FromAccountTransactions", fields: [fromAccountId], references: [id], onDelete: SetNull)
+  toAccount     Account?          @relation("ToAccountTransactions", fields: [toAccountId], references: [id], onDelete: SetNull)
+}
+
+model Payment {
+  id            String            @id @default(cuid())
+  fromAccountId String
+  toAccountId   String
+  amount        Decimal           @db.Decimal(18, 2)
+  scheduledAt   DateTime?
+  status        TransactionStatus @default(PENDING)
+  reference     String            @unique
+  fromAccount   Account           @relation("OutgoingPayments", fields: [fromAccountId], references: [id], onDelete: Restrict)
+  toAccount     Account           @relation("IncomingPayments", fields: [toAccountId], references: [id], onDelete: Restrict)
+}
+
+model KYCDocument {
+  id         String          @id @default(cuid())
+  userId     String
+  docType    KYCDocumentType
+  fileUrl    String
+  reviewedBy String?
+  status     KYCStatus       @default(PENDING)
+  createdAt  DateTime        @default(now())
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  metadata  Json
+  ipAddress String
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  body      String
+  type      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
