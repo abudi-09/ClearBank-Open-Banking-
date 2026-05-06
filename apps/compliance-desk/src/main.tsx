@@ -8,16 +8,23 @@ import { queryClient } from "./lib/queryClient";
 
 async function enableMocking() {
   if (!import.meta.env.DEV) return;
-  const { worker } = await import("./mocks/browser");
-  await worker.start({
-    onUnhandledRequest: "bypass",
-    serviceWorker: {
-      url: "/mockServiceWorker.js",
-    },
-  });
+  try {
+    const { worker } = await import("./mocks/browser");
+    await worker.start({
+      onUnhandledRequest: "bypass",
+      serviceWorker: {
+        url: "/mockServiceWorker.js",
+      },
+    });
+  } catch (error) {
+    console.warn(
+      "[compliance-desk] MSW failed to start — run `npx msw init public` in apps/compliance-desk and restart dev.",
+      error,
+    );
+  }
 }
 
-void enableMocking().then(() => {
+void enableMocking().finally(() => {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>

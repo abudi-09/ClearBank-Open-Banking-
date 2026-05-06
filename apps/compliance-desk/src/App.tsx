@@ -9,16 +9,13 @@ import LoginPage from "@/pages/Login";
 import ReportsPage from "@/pages/Reports";
 import TransactionsPage from "@/pages/Transactions";
 
-function requireComplianceToken(): boolean {
+function ComplianceGate() {
   const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  if (!token) return false;
+  if (!token) return <Navigate to="/login" replace />;
   const role = getRoleFromToken(token);
   const parsed = UserRole.safeParse(role);
-  return parsed.success && parsed.data === "COMPLIANCE";
-}
-
-function ComplianceGate() {
-  if (!requireComplianceToken()) {
+  if (!parsed.success || parsed.data !== "COMPLIANCE") {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     return <Navigate to="/login" replace />;
   }
   return <Outlet />;

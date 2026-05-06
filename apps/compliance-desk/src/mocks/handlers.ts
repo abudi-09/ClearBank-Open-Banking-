@@ -191,7 +191,7 @@ export const handlers = [
     };
 
     db.auditLogs.unshift({
-      id: `aud_${faker.string.uuid()}`,
+      id: `aud_${faker.string.nanoid()}`,
       action: `PATCH /compliance/kyc/${id}`,
       userEmail: "compliance@clearbank.dev",
       ipAddress: "127.0.0.1",
