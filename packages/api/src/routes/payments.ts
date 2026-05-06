@@ -11,6 +11,9 @@ const paymentSchema = z.object({
   scheduledAt: z.string().datetime().optional(),
   reference: z.string().min(3),
 });
+const bulkPaymentSchema = z.object({
+  payments: z.array(paymentSchema).min(1).max(100),
+});
 
 const transferSchema = z.object({
   fromAccountId: z.string().min(1),
@@ -52,6 +55,31 @@ paymentsRouter.get("/:id", async (c) => {
     return c.json({ error: "Payment not found" }, 404);
   }
   return c.json({ ...payment, amount: payment.amount.toString() });
+});
+
+paymentsRouter.post("/bulk", validateBody(bulkPaymentSchema), async (c) => {
+  const body = c.get("validatedBody") as z.infer<typeof bulkPaymentSchema>;
+  const created = await prisma.$transaction(
+    body.payments.map((item) =>
+      prisma.payment.create({
+        data: {
+          fromAccountId: item.fromAccountId,
+          toAccountId: item.toAccountId,
+          amount: new Prisma.Decimal(item.amount.toFixed(2)),
+          scheduledAt: item.scheduledAt ? new Date(item.scheduledAt) : null,
+          reference: item.reference,
+          status: "PENDING",
+        },
+      }),
+    ),
+  );
+  return c.json(
+    created.map((payment) => ({
+      ...payment,
+      amount: payment.amount.toString(),
+    })),
+    201,
+  );
 });
 
 transfersRouter.post("/", validateBody(transferSchema), async (c) => {

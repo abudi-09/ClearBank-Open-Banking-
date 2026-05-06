@@ -3,6 +3,11 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma.js";
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../middleware/auth.js";
+import {
+  getRequestIpFromHeaders,
+  resetFailedLogins,
+  trackFailedLogin,
+} from "../middleware/bruteForce.js";
 import { validateBody } from "../middleware/validate.js";
 
 const registerSchema = z.object({
@@ -59,15 +64,19 @@ authRouter.post("/register", validateBody(registerSchema), async (c) => {
 
 authRouter.post("/login", validateBody(loginSchema), async (c) => {
   const body = c.get("validatedBody") as z.infer<typeof loginSchema>;
+  const ip = getRequestIpFromHeaders(c.req.header("x-forwarded-for"), c.req.header("x-real-ip"));
   const user = await prisma.user.findUnique({ where: { email: body.email } });
   if (!user) {
+    await trackFailedLogin(ip, body.email);
     return c.json({ error: "Invalid credentials" }, 401);
   }
 
   const isPasswordValid = await bcrypt.compare(body.password, user.passwordHash);
   if (!isPasswordValid) {
+    await trackFailedLogin(ip, body.email);
     return c.json({ error: "Invalid credentials" }, 401);
   }
+  await resetFailedLogins(ip, body.email);
 
   const tokenBase = { sub: user.id, email: user.email, role: user.role };
   return c.json({

@@ -10,14 +10,23 @@ import { complianceRouter, kycRouter } from "./routes/compliance.js";
 import { notificationsRouter } from "./routes/notifications.js";
 import { auditLogMiddleware } from "./middleware/audit-log.js";
 import { authMiddleware } from "./middleware/auth.js";
+import { bruteForceProtection } from "./middleware/bruteForce.js";
 import { guardRole } from "./middleware/guard-role.js";
+import { heavyLimiter, standardLimiter, strictLimiter } from "./middleware/rateLimiter.js";
 
 const app = new Hono();
 const port = Number(process.env.PORT ?? 4000);
 
 app.use("*", auditLogMiddleware);
 
+app.use("/auth/login", strictLimiter, bruteForceProtection);
+app.use("/auth/register", strictLimiter, bruteForceProtection);
+
 app.route("/auth", authRouter);
+
+app.use("/fx", authMiddleware);
+app.use("/fx/*", authMiddleware);
+app.use("/fx/rates", heavyLimiter);
 app.route("/fx", fxRouter);
 
 app.use("/accounts", authMiddleware);
@@ -32,6 +41,22 @@ app.use("/notifications", authMiddleware);
 app.use("/notifications/*", authMiddleware);
 app.use("/compliance/*", authMiddleware, guardRole("COMPLIANCE"));
 app.use("/compliance", authMiddleware, guardRole("COMPLIANCE"));
+
+app.use("/payments/bulk", heavyLimiter);
+app.use("/compliance/reports", heavyLimiter);
+
+app.use("/accounts", standardLimiter);
+app.use("/accounts/*", standardLimiter);
+app.use("/payments", standardLimiter);
+app.use("/payments/*", standardLimiter);
+app.use("/transfers", standardLimiter);
+app.use("/transfers/*", standardLimiter);
+app.use("/kyc", standardLimiter);
+app.use("/kyc/*", standardLimiter);
+app.use("/notifications", standardLimiter);
+app.use("/notifications/*", standardLimiter);
+app.use("/compliance", standardLimiter);
+app.use("/compliance/*", standardLimiter);
 
 app.route("/accounts", accountsRouter);
 app.route("/payments", paymentsRouter);

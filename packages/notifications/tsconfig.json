@@ -8,7 +8,12 @@
     "moduleResolution": "NodeNext",
     "declaration": true,
     "declarationMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@clearbank/ledger": ["packages/ledger/src/index.ts"],
+      "@clearbank/api": ["packages/api/src/index.ts"],
+      "@clearbank/notifications": ["packages/notifications/src/index.ts"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

@@ -80,3 +80,30 @@ complianceRouter.get("/aml-alerts", async (c) => {
     })),
   );
 });
+
+complianceRouter.get("/reports", async (c) => {
+  const [pendingKyc, rejectedKyc, failedTransactions, highValueTransactions] = await Promise.all([
+    prisma.kYCDocument.count({ where: { status: "PENDING" } }),
+    prisma.kYCDocument.count({ where: { status: "REJECTED" } }),
+    prisma.transaction.count({ where: { status: "FAILED" } }),
+    prisma.transaction.count({
+      where: {
+        amount: {
+          gte: 10_000,
+        },
+      },
+    }),
+  ]);
+
+  return c.json({
+    generatedAt: new Date().toISOString(),
+    kyc: {
+      pending: pendingKyc,
+      rejected: rejectedKyc,
+    },
+    transactions: {
+      failed: failedTransactions,
+      highValue: highValueTransactions,
+    },
+  });
+});
